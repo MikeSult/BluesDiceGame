@@ -1,0 +1,210 @@
+<html>
+<head>
+<title>Blues Dice Game</title>
+    <link href="BluesDice.css" rel="stylesheet" type="text/css">    
+    <script type="text/javascript" src="https://www.guitarland.com/javascripts/Tone.js"></script>
+	<script type="text/javascript" src="https://www.guitarland.com/javascripts/StartAudioContext.js"></script>
+
+    <script  type="text/javascript" src="https://www.guitarland.com/javascripts/scaleSpelling.js"></script>
+    <script type="text/javascript"  src="https://www.guitarland.com/javascripts/lilyPondAdapter.js"></script>
+    <script type="text/javascript" src="https://www.guitarland.com/javascripts/Rhythm.js"></script>
+
+<!--
+    <script type="text/javascript" src="../ToneJS/PracticeRoom/Rhythm.js"></script>
+    <script src="../ToneJS/PracticeRoom/scaleSpelling.js"></script>
+    <script src="../ToneJS/PracticeRoom/lilyPondAdapter.js"></script>
+-->
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.16/p5.js"></script>
+</head>
+<body>
+<h1>Blues Dice Game</h1>
+<div id='myP5Container'></div>
+<ul>
+<li>
+Like the Mozart Dice Game yet with blues phrases.
+</li><li>
+This game uses two bar phrases, the phrasing will have a pickup in most cases.
+</li><li>
+Therefore the phrase won't start on the barline but instead have a pickup phrase.
+</li><li>
+Each phrase starts on beat '3' of 4/4 (possibly starting with a leading rest) and lasts for 8 counts including rests.
+</li><li>
+A random throw of a pair of dice will choose each of the 2 bar phrases (6 phrases per 12 bar blues chorus) choosing from a library of 11 choices.<button id="demoPhrases" class="playButton">Demo the 2 bar Phrases</button>
+</li><li>
+Click the 'Roll the Dice' button to create a four chorus composition by combining several randomly choosen phrases and layer them over a 12 bar blues accompaniment at various tempos.  
+</li><li>
+In the lilypond code secction a text file is generated that can be opened in <a ref="" target="_blank">lilyPond (open source music notation software)</a> to display the standard music notation for the generated composition.  <a ref="" target="_blank">More information about using the lilypond file.</a>
+</li>
+
+
+</ul>
+<button id="playNewTune" class="playButton">Roll the DICE - Create a New Blues Tune</button>
+<input type="button" class="stopButton" VALUE="Stop" onclick="stopIt()">
+<button id="repeatTune" class="playButton">Repeat</button>
+
+<form name="myForm">
+<p>
+ tempo:<select name="tempo" onchange="updateTempo()">
+    <option value=60>60</option>
+    <option value=65>65</option>
+    <option value=70>70</option>
+    <option value=75>75</option>
+    <option value=80>80</option>
+    <option value=90>90</option>
+    <option value=100>100</option>
+    <option value=105>105</option>
+    <option value=110>110</option>
+    <option value=115>115</option>
+    <option value=120 selected>120</option>
+    <option value=125>125</option>
+    <option value=130>130</option>
+    <option value=135>135</option>
+    <option value=140>140</option>
+    <option value=150>150</option>
+    <option value=160>160</option>
+    <option value=170>170</option>
+    <option value=180>180</option>
+    <option value=190>190</option>
+    <option value=200>200</option>
+    <option value=220>220</option>
+    <option value=240>240</option>
+    <option value=250>250</option>
+    <option value=260>260</option>
+    <option value=270>270</option>
+    <option value=280>280</option>
+</select>
+
+| <label> mute <input type="checkbox" name="muteSound" id="muteSound" value="muteSound"></label>
+
+| melody volume:<select name="synth_volume" id="synth_volume">
+    <option value="-Infinity">-Infinity</option>
+    <option value="-30">-30</option>
+    <option value="-25">-25</option>
+    <option value="-20">-20</option>
+    <option value="-15">-15</option>
+    <option value="-10">-10</option>
+    <option value="-5">-5</option>
+    <option value="0" selected>0</option>
+</select>
+
+| bass volume:<select name="bass_volume" id="bass_volume">
+    <option value="-Infinity">-Infinity</option>
+    <option value="-30">-30</option>
+    <option value="-25">-25</option>
+    <option value="-20">-20</option>
+    <option value="-15">-15</option>
+    <option value="-10">-10</option>
+    <option value="-5" selected>-5</option>
+    <option value="0">0</option>
+</select>
+| comp volume:<select name="comp_volume" id="comp_volume">
+    <option value="-Infinity">-Infinity</option>
+    <option value="-30">-30</option>
+    <option value="-25">-25</option>
+    <option value="-20">-20</option>
+    <option value="-15">-15</option>
+    <option value="-10" selected>-10</option>
+    <option value="-5">-5</option>
+    <option value="0">0</option>
+</select>
+
+<br />
+<!--
+<input type="button" class="playButton" VALUE="Play" id="button1">
+-->
+
+
+</form>
+
+<div id="compositionData"></div>
+<br>
+<p>Lily Pond file</p>
+<textarea rows=10 cols=100 id="lilyPondCode"></textarea>
+
+<p>Lily Pond bassline</p>
+<textarea rows=5 cols=100 id="lilyPondBassCode"></textarea>
+
+
+    <script>
+        Tone.Transport.timeSignature = 4;
+        Tone.Transport.swing = 0.4;
+    </script>
+
+    <script src="BluesPhrases.js"></script>
+
+    <script>
+        // event handlers
+		var mybutton1 = document.getElementById("playNewTune");
+		mybutton1.onclick = PlayNewTune;
+
+		var mybutton2 = document.getElementById("repeatTune");
+		mybutton2.onclick = repeatTune;
+
+		var myDemoPhrasesbutton = document.getElementById("demoPhrases");
+		myDemoPhrasesbutton.onclick = demoTwoBarPhrases;
+
+		var mySynthVolume = document.getElementById("synth_volume");
+		mySynthVolume.onchange = updateMelodyVolume;
+
+		var myBassVolume = document.getElementById("bass_volume");
+		myBassVolume.onchange = updateBassVolume;
+
+		var myCompVolume = document.getElementById("comp_volume");
+		myCompVolume.onchange = updateCompVolume;
+    </script>
+    
+<script>
+// p5 code (trying to make dice animation)
+  var pg;
+  function setup(){
+    var myCanvas = createCanvas(600, 180, WEBGL);
+    myCanvas.parent('myP5Container');
+    pg = createGraphics(200, 200);
+    pg.textSize(70);
+    pg2 = createGraphics(200, 200);
+    pg2.textSize(70);
+  }
+
+function draw(){
+  background(0,120,0);
+  
+  translate(-140, 0, 0);
+//  normalMaterial();
+  push();
+  rotateZ(frameCount * 0.02);
+  rotateX(frameCount * 0.02);
+  rotateY(frameCount * 0.02);
+  pg.background(240);
+  pg.strokeWeight(10);
+  pg.rect(0,0,200,200);
+  pg.textSize(42);
+  pg.text('  ?        ?\n        \n  ?        ?', 0, 60);
+  //pass image as texture
+  texture(pg);
+  box(60, 60, 60);
+  pop();
+  
+  translate(240, 0, 0);
+  push();
+  rotateZ(frameCount * 0.03);
+  rotateX(frameCount * 0.03);
+  rotateY(frameCount * 0.03);
+  pg2.background(240);
+  pg2.strokeWeight(10);
+  pg2.rect(0,0,200,200);
+  pg2.textSize(42);
+  pg2.text('  ?         \n       ?\n           ?', 0, 60);
+//  pg2.text('  ?         \n        \n            ?', 0, 60);
+  texture(pg2);
+  box(60, 60, 60);
+  pop();
+}
+  
+</script>
+
+
+    
+    
+</body>
+</html>
